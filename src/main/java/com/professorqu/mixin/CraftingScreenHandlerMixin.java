@@ -14,13 +14,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CraftingScreenHandler.class)
-public class CraftingScreenHandlerMixin {
+public abstract class CraftingScreenHandlerMixin {
 	@Inject(method = "updateResult", at = @At("TAIL"))
 	private static void updateResult(ScreenHandler handler, World world, PlayerEntity player, RecipeInputInventory craftingInventory, CraftingResultInventory resultInventory, CallbackInfo ci) {
 		CraftingHelper helper = new CraftingHelper(handler, world, player, craftingInventory, resultInventory);
 
 		if (helper.emptyRecipe()) return;
-		if (helper.validVanillaRecipe()) return;
+//		if (helper.validVanillaRecipe()) return;
 
 		ItemStack itemStack = helper.getCraftedItem();
 		helper.setResultStack(itemStack);

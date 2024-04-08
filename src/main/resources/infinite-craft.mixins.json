@@ -3,7 +3,9 @@
 	"package": "com.professorqu.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-      "CraftingScreenHandlerMixin"
+	  "CraftingResultSlotMixin",
+      "CraftingScreenHandlerMixin",
+	  "PersistentStateManagerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

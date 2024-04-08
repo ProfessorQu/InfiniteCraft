@@ -1,21 +1,20 @@
 package com.professorqu.helpers;
 
 import com.professorqu.InfiniteCraft;
+import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.registry.Registries;
-import net.minecraft.resource.featuretoggle.FeatureFlag;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.world.PersistentState;
 import net.minecraft.world.World;
 
-import java.util.Random;
 
 public class CraftingHelper {
     private final ScreenHandler handler;
@@ -33,7 +32,7 @@ public class CraftingHelper {
     }
 
     public boolean emptyRecipe() {
-        return this.craftingInventory.getHeldStacks().stream().allMatch(ItemStack::isEmpty);
+        return this.craftingInventory.isEmpty();
     }
 
     public boolean validVanillaRecipe() {
@@ -41,26 +40,28 @@ public class CraftingHelper {
     }
 
     public ItemStack getCraftedItem() {
-        Item item;
-
-        do {
+        RecipeInput input = new RecipeInput(RecipeInput.convertItemStacksToIntegers(this.craftingInventory.getHeldStacks()));
+        Item item = RecipesManager.getItem(input);
+        if (item == null) {
             item = generateItem();
-        } while (!itemIsOk(item));
+            RecipesManager.addItem(input, item);
+        }
 
         return new ItemStack(item);
     }
 
     private Item generateItem() {
-        int randIndex = InfiniteCraft.RNG.nextInt(Registries.ITEM.size());
-        return Registries.ITEM.get(randIndex);
-    }
+        Item item;
+        do {
+            int randIndex = InfiniteCraft.randomInt(Registries.ITEM.size());
+            item = Registries.ITEM.get(randIndex);
+        } while (!item.isEnabled(world.getEnabledFeatures()));
 
-    private boolean itemIsOk(Item item) {
-        return item.getRequiredFeatures().isSubsetOf(world.getEnabledFeatures());
+        return item;
     }
 
     public void setResultStack(ItemStack itemStack) {
-        ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)player;
+        ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
 
         resultInventory.setStack(0, itemStack);
         handler.setPreviousTrackedSlot(0, itemStack);
