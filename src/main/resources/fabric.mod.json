@@ -3,13 +3,12 @@
 	"id": "infinite-craft",
 	"version": "${version}",
 	"name": "Infinite Craft",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "This mod allows any crafting recipe to result in an item",
 	"authors": [
-		"Me!"
+		"ProfessorQu"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/ProfessorQu/InfiniteCraft"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/infinite-craft/icon.png",

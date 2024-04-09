@@ -1,34 +1,34 @@
 package com.professorqu;
 
-import com.professorqu.helpers.CraftingHelper;
-import com.professorqu.helpers.RecipesManager;
-import com.professorqu.helpers.RecipesState;
 import net.fabricmc.api.ModInitializer;
 
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.datafixer.DataFixTypes;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.scoreboard.ScoreboardState;
-import net.minecraft.world.PersistentState;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class InfiniteCraft implements ModInitializer {
     public static final String MOD_ID = "infinite-craft";
+    public static final String MOD_NAME = "Infinite Craft";
+    public static final String RECIPES_FILE = "recipes";
+
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static final Random RNG = new Random();
 
     @Override
     public void onInitialize() {
-        ServerLifecycleEvents.SERVER_STARTED.register(RecipesManager::loadRecipes);
-        ServerLifecycleEvents.SERVER_STOPPED.register(RecipesManager::saveRecipes);
-
-        LOGGER.info("Loaded: " + MOD_ID);
+        LOGGER.info("Loaded: {}", MOD_NAME);
     }
 
-    public static int randomInt(int bound) {
-        return RNG.nextInt(bound);
+    /**
+     * Generate a random integer
+     * @param maximum   the maximum value
+     * @return          an integer in the bound [0, maximum>
+     */
+    public static int randomInt(int maximum) {
+        return RNG.nextInt(maximum);
     }
 }
