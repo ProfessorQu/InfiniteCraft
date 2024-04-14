@@ -1,7 +1,6 @@
 package com.professorqu.saving;
 
 import com.professorqu.InfiniteCraft;
-import net.minecraft.item.Item;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.PersistentState;
@@ -12,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class RecipesState extends PersistentState {
-    private final Map<RecipeInput, Integer> recipes = new HashMap<>();
+    private final Map<RecipeInput, RecipeResult> recipes = new HashMap<>();
 
     private static final Type<RecipesState> TYPE = new Type<>(
             RecipesState::new,
@@ -23,6 +22,7 @@ public class RecipesState extends PersistentState {
     private static final String RECIPES_KEY = "Recipes";
     private static final String INPUT_KEY = "Input";
     private static final String RESULT_KEY = "Result";
+    private static final String COUNT_KEY = "Count";
 
     private static @NotNull RecipesState createFromNbt(@NotNull NbtCompound nbt) {
         RecipesState state = new RecipesState();
@@ -34,9 +34,10 @@ public class RecipesState extends PersistentState {
             int[] inputArray = recipeNbt.getIntArray(INPUT_KEY);
             List<Integer> inputList = Arrays.stream(inputArray).boxed().toList();
 
-            int result = recipeNbt.getInt(RESULT_KEY);
+            int itemId = recipeNbt.getInt(RESULT_KEY);
+            int count = recipeNbt.getInt(COUNT_KEY);
 
-            state.addItem(new RecipeInput(inputList), result);
+            state.addItem(new RecipeInput(inputList), new RecipeResult(itemId, count));
         }
 
         return state;
@@ -49,8 +50,9 @@ public class RecipesState extends PersistentState {
         for (RecipeInput input : this.recipes.keySet()) {
             NbtCompound compound = new NbtCompound();
 
-            compound.putIntArray(INPUT_KEY, input.getInput());
-            compound.putInt(RESULT_KEY, this.recipes.get(input));
+            compound.putIntArray(INPUT_KEY, input.input());
+            compound.putInt(RESULT_KEY, this.recipes.get(input).getItemId());
+            compound.putInt(COUNT_KEY, this.recipes.get(input).getCount());
 
             nbtList.add(compound);
         }
@@ -61,8 +63,8 @@ public class RecipesState extends PersistentState {
 
     /**
      * Get the server state for the given server
-     * @param server    the server to get the state for
-     * @return          the server state of the server
+     * @param server the server to get the state for
+     * @return the server state of the server
      */
     public static @NotNull RecipesState getServerState(@NotNull MinecraftServer server) {
         PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
@@ -72,23 +74,20 @@ public class RecipesState extends PersistentState {
     }
 
     /**
-     * Get the resulting item from the given input
-     * @param input the input to get the result from
-     * @return      the resulting item
+     * Get the resulting item from the given getInput
+     * @param input the getInput to get the result from
+     * @return the resulting item
      */
-    public @Nullable Item tryGetItem(RecipeInput input) {
-        Integer id = this.recipes.get(input);
-        if (id == null) return null;
-
-        return Item.byRawId(id);
+    public @Nullable RecipeResult tryGetResult(RecipeInput input) {
+        return this.recipes.get(input);
     }
 
     /**
      * Add an item to the list of stored recipes
-     * @param input     the input of the recipe
-     * @param resultId  the id of the result of the recipe
+     * @param input the input of the recipe
+     * @param result the result of the recipe
      */
-    public void addItem(RecipeInput input, int resultId) {
-        this.recipes.put(input, resultId);
+    public void addItem(RecipeInput input, RecipeResult result) {
+        this.recipes.put(input, result);
     }
 }

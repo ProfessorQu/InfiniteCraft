@@ -1,12 +1,12 @@
 package com.professorqu.helpers;
 
-import com.professorqu.InfiniteCraft;
+import com.professorqu.generate.Generator;
+import com.professorqu.saving.RecipeResult;
 import com.professorqu.saving.RecipeInput;
 import com.professorqu.saving.RecipesState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingResultInventory;
 import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
 import net.minecraft.registry.Registries;
@@ -14,6 +14,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.World;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -37,45 +38,27 @@ public class CraftingHelper {
     }
 
     /**
-     * Check if the recipe is a valid vanilla recipe
-     * @return  return true if the recipe is a valid vanilla recipe
-     */
-    public boolean validVanillaRecipe() {
-        return !this.resultInventory.isEmpty();
-    }
-
-    /**
      * Get the item that is crafted from the crafting screen
-     * @return  the item that is crafted from the crafting screen
+     * @return the item that is crafted from the crafting screen
      */
     public @NotNull ItemStack getCraftedItem() {
         MinecraftServer server = world.getServer();
         if (server == null) throw new RuntimeException("Server wasn't available");
 
-        RecipeInput input = new RecipeInput(RecipeInput.convertToItemIds(this.craftingInventory.getHeldStacks()));
+        RecipeInput input = RecipeInput.fromItemStacks(this.craftingInventory.getHeldStacks());
         RecipesState state = RecipesState.getServerState(server);
 
-        Item item = state.tryGetItem(input);
-        if (item == null) {
-            item = this.generateEnabledItem();
-            state.addItem(input, Item.getRawId(item));
+        RecipeResult result = state.tryGetResult(input);
+        if (result == null) {
+            result = this.generateItem(input);
+            state.addItem(input, result);
         }
 
-        return new ItemStack(item);
+        return new ItemStack(Registries.ITEM.get(result.getItemId()), result.getCount());
     }
 
-    private @NotNull Item generateEnabledItem() {
-        Item item;
-        do {
-            item = this.generateItem();
-        } while (!item.isEnabled(world.getEnabledFeatures()));
-
-        return item;
-    }
-
-    private @NotNull Item generateItem() {
-        int randIndex = InfiniteCraft.randomInt(Registries.ITEM.size());
-        return Registries.ITEM.get(randIndex);
+    private @NotNull RecipeResult generateItem(RecipeInput input) {
+        return Generator.generate(ArrayUtils.toPrimitive(input.input().toArray(new Integer[0])));
     }
 
     /**
