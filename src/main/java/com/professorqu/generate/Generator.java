@@ -53,12 +53,12 @@ public class Generator {
      * @param enabledFeatures the features that are enabled in the world
      * @return the result of the recipe
      */
-    public static RecipeResult generate(int[] recipe, FeatureSet enabledFeatures) {
+    public static RecipeResult generate(int[] recipe, int seed, FeatureSet enabledFeatures) {
         float[] recipeFloat = new float[recipe.length + 1];
         for (int i = 0; i < recipe.length; i++) {
             recipeFloat[i] = (float) recipe[i];
         }
-//        recipeFloat[recipe.length] = seed;
+        recipeFloat[recipe.length] = seed;
 
         float[][] input = {recipeFloat};
         float[] output;

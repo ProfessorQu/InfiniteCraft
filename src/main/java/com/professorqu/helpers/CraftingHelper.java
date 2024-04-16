@@ -28,20 +28,20 @@ public class CraftingHelper<C extends Inventory, T extends Recipe<C>> {
     private final RecipeType<T> type;
     private final RecipeInputInventory inventory;
     private final World world;
-//    private final int seed;
+    private final int seed;
 
     public CraftingHelper(RecipeType<T> type, C inventory, World world) {
         this.type = type;
         this.inventory = (RecipeInputInventory) inventory;
         this.world = world;
 
-//        ServerWorld serverWorld = (ServerWorld) this.world;
-//        this.seed = (int) serverWorld.getSeed();
+        ServerWorld serverWorld = (ServerWorld) this.world;
+        this.seed = (int) serverWorld.getSeed();
     }
 
     /**
      * Generate a recipe entry for the inventory
-     * @return  a recipe entry with a generated item
+     * @return a recipe entry with a generated item
      */
     public Optional<RecipeEntry<T>> getRecipeEntry() {
         if (this.type != RecipeType.CRAFTING) return Optional.empty();
@@ -83,7 +83,7 @@ public class CraftingHelper<C extends Inventory, T extends Recipe<C>> {
     private @NotNull RecipeResult generateResult(RecipeInput input) {
         return Generator.generate(
                 ArrayUtils.toPrimitive(input.input().toArray(new Integer[0])),
-//                this.seed,
+                this.seed,
                 this.world.getEnabledFeatures()
         );
     }
