@@ -20,6 +20,7 @@ public abstract class CraftingScreenHandlerMixin {
 		CraftingHelper helper = new CraftingHelper(handler, world, player, craftingInventory, resultInventory);
 
 		if (helper.emptyRecipe()) return;
+		if (helper.validVanillaRecipe()) return;
 
 		ItemStack itemStack = helper.getCraftedItem();
 		helper.setResultStack(itemStack);

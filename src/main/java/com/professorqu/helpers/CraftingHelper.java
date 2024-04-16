@@ -37,6 +37,10 @@ public class CraftingHelper {
         return this.craftingInventory.isEmpty();
     }
 
+    public boolean validVanillaRecipe() {
+        return !this.resultInventory.isEmpty();
+    }
+
     /**
      * Get the item that is crafted from the crafting screen
      * @return the item that is crafted from the crafting screen
