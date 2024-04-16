@@ -3,7 +3,7 @@ package com.professorqu.saving;
 import net.minecraft.registry.Registries;
 
 public class RecipeResult {
-    private final int itemId;
+    private int itemId;
     private final int count;
 
     public RecipeResult(float itemId, float count) {
@@ -17,6 +17,10 @@ public class RecipeResult {
 
     public int getItemId() {
         return this.itemId;
+    }
+
+    public void setItemId(int itemId) {
+        this.itemId = itemId;
     }
 
     public int getCount() {
