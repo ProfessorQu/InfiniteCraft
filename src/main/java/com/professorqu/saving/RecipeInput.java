@@ -3,7 +3,6 @@ package com.professorqu.saving;
 import com.google.common.collect.Iterables;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,7 @@ public record RecipeInput(List<Integer> input) {
      * @param itemStacks the item stacks to create the input from
      * @return the resulting input
      */
-    public static RecipeInput fromItemStacks(@NotNull List<ItemStack> itemStacks) {
+    public static RecipeInput fromItemStacks(List<ItemStack> itemStacks) {
         return new RecipeInput(convertToItemIds(itemStacks));
     }
 
@@ -24,7 +23,7 @@ public record RecipeInput(List<Integer> input) {
      * @param itemStacks a list of ItemStacks to convert to a list of item ids
      * @return a list of item ids
      */
-    private static @NotNull List<Integer> convertToItemIds(@NotNull List<ItemStack> itemStacks) {
+    private static List<Integer> convertToItemIds(List<ItemStack> itemStacks) {
         List<Integer> inputList = new ArrayList<>(itemStacks.stream().map(ItemStack::getItem).map(Item::getRawId).toList());
         if (inputList.size() == 4) {
             inputList.add(2, 0);

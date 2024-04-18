@@ -15,40 +15,41 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.world.World;
 import org.apache.commons.lang3.ArrayUtils;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
 
-public class CraftingHelper<C extends Inventory, T extends Recipe<C>> {
+public class CraftingHelper {
     private static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
+    private static Generator CURRENT_GENERATOR;
 
-    private final RecipeType<T> type;
-    private final RecipeInputInventory inventory;
-    private final World world;
-    private final int seed;
+    public static void createGenerator(MinecraftServer server) {
+        InfiniteCraft.LOGGER.info("Created new Generator");
+        CURRENT_GENERATOR = new Generator(server);
+    }
 
-    public CraftingHelper(RecipeType<T> type, C inventory, World world) {
-        this.type = type;
-        this.inventory = (RecipeInputInventory) inventory;
-        this.world = world;
-
-        ServerWorld serverWorld = (ServerWorld) this.world;
-        this.seed = (int) serverWorld.getSeed();
+    public static void destroyGenerator() {
+        InfiniteCraft.LOGGER.info("Destroyed current Generator");
+        CURRENT_GENERATOR = null;
     }
 
     /**
-     * Generate a recipe entry for the inventory
-     * @return a recipe entry with a generated item
+     * Get the recipe entry
+     * @param type the recipe type
+     * @param inventory the inventory where the recipe is
+     * @param world the world of the server
+     * @return an optional recipe entry
+     * @param <C> extends Inventory
+     * @param <T> extends Recipe<C>
      */
-    public Optional<RecipeEntry<T>> getRecipeEntry() {
-        if (this.type != RecipeType.CRAFTING) return Optional.empty();
+    public static<C extends Inventory, T extends Recipe<C>> Optional<RecipeEntry<T>> getRecipeEntry(
+            RecipeType<T> type, RecipeInputInventory inventory, ServerWorld world) {
+        if (type != RecipeType.CRAFTING) return Optional.empty();
 
         Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
         DefaultedList<Ingredient> ingredients = DefaultedList.ofSize(1, ingredient);
-        ItemStack itemStack = this.getCraftedItem();
+        ItemStack itemStack = CraftingHelper.getCraftedItem(inventory, world);
 
         RawShapedRecipe rawShapedRecipe = new RawShapedRecipe(
                 inventory.getWidth(), inventory.getHeight(),
@@ -64,27 +65,25 @@ public class CraftingHelper<C extends Inventory, T extends Recipe<C>> {
         return Optional.of(new RecipeEntry<>(RECIPE_ID, recipe));
     }
 
-    private ItemStack getCraftedItem() {
+    private static ItemStack getCraftedItem(RecipeInputInventory inventory, ServerWorld world) {
         MinecraftServer server = world.getServer();
-        if (server == null) return null;
 
-        RecipeInput input = RecipeInput.fromItemStacks(this.inventory.getHeldStacks());
+        RecipeInput input = RecipeInput.fromItemStacks(inventory.getHeldStacks());
         RecipesState state = RecipesState.getServerState(server);
 
         RecipeResult result = state.tryGetResult(input);
         if (result == null) {
-            result = this.generateResult(input);
+            result = CraftingHelper.generateRecipeResult(input, world);
             state.addItem(input, result);
         }
 
         return new ItemStack(Registries.ITEM.get(result.getItemId()), result.getCount());
     }
 
-    private @NotNull RecipeResult generateResult(RecipeInput input) {
-        return Generator.generate(
+    private static RecipeResult generateRecipeResult(RecipeInput input, ServerWorld world) {
+        return CURRENT_GENERATOR.generate(
                 ArrayUtils.toPrimitive(input.input().toArray(new Integer[0])),
-                this.seed,
-                this.world.getEnabledFeatures()
+                world.getEnabledFeatures()
         );
     }
 }

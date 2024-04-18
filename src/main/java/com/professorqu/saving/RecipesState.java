@@ -5,7 +5,6 @@ import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -24,7 +23,7 @@ public class RecipesState extends PersistentState {
     private static final String RESULT_KEY = "Result";
     private static final String COUNT_KEY = "Count";
 
-    private static @NotNull RecipesState createFromNbt(@NotNull NbtCompound nbt) {
+    private static RecipesState createFromNbt(NbtCompound nbt) {
         RecipesState state = new RecipesState();
         NbtList recipesList = nbt.getList(RECIPES_KEY, NbtElement.COMPOUND_TYPE);
 
@@ -44,7 +43,7 @@ public class RecipesState extends PersistentState {
     }
 
     @Override
-    public @NotNull NbtCompound writeNbt(@NotNull NbtCompound nbt) {
+    public NbtCompound writeNbt(NbtCompound nbt) {
         NbtList nbtList = new NbtList();
 
         for (RecipeInput input : this.recipes.keySet()) {
@@ -66,7 +65,7 @@ public class RecipesState extends PersistentState {
      * @param server the server to get the state for
      * @return the server state of the server
      */
-    public static @NotNull RecipesState getServerState(@NotNull MinecraftServer server) {
+    public static RecipesState getServerState(MinecraftServer server) {
         PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
         RecipesState state = manager.getOrCreate(TYPE, InfiniteCraft.RECIPES_FILE);
         state.markDirty();
