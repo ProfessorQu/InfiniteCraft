@@ -1,4 +1,4 @@
-package com.professorqu.generate;
+package com.professorqu.helpers;
 
 import ai.onnxruntime.OnnxTensor;
 import ai.onnxruntime.OrtEnvironment;
@@ -8,6 +8,7 @@ import com.professorqu.saving.RecipeResult;
 import net.minecraft.registry.Registries;
 import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Pair;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class Generator {
      * @param enabledFeatures the features that are enabled in the world
      * @return the result of the recipe
      */
-    public RecipeResult generate(int[] recipe, FeatureSet enabledFeatures) {
+    public Pair<RecipeResult, Boolean> generate(int[] recipe, FeatureSet enabledFeatures) {
         float[] recipeFloat = new float[recipe.length + 1];
         for (int i = 0; i < recipe.length; i++) {
             recipeFloat[i] = (float) recipe[i];
@@ -79,12 +80,14 @@ public class Generator {
         }
 
         RecipeResult result = new RecipeResult(output[0], output[1]);
+        boolean save = false;
 
         while (!Registries.ITEM.get(result.getItemId()).isEnabled(enabledFeatures)) {
             result.setItemId(getRandomItemId());
+            save = true;
         }
 
-        return result;
+        return new Pair<>(result, save);
     }
 
     private static int getRandomItemId() {

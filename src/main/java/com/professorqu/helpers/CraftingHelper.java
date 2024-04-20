@@ -1,7 +1,6 @@
 package com.professorqu.helpers;
 
 import com.professorqu.InfiniteCraft;
-import com.professorqu.generate.Generator;
 import com.professorqu.saving.RecipeResult;
 import com.professorqu.saving.RecipeInput;
 import com.professorqu.saving.RecipesState;
@@ -14,6 +13,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.collection.DefaultedList;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -73,14 +73,17 @@ public class CraftingHelper {
 
         RecipeResult result = state.tryGetResult(input);
         if (result == null) {
-            result = CraftingHelper.generateRecipeResult(input, world);
-            state.addItem(input, result);
+            Pair<RecipeResult, Boolean> pair = CraftingHelper.generateRecipeResult(input, world);
+            result = pair.getLeft();
+            if (pair.getRight()) {
+                state.addItem(input, result);
+            }
         }
 
         return new ItemStack(Registries.ITEM.get(result.getItemId()), result.getCount());
     }
 
-    private static RecipeResult generateRecipeResult(RecipeInput input, ServerWorld world) {
+    private static Pair<RecipeResult, Boolean> generateRecipeResult(RecipeInput input, ServerWorld world) {
         return CURRENT_GENERATOR.generate(
                 ArrayUtils.toPrimitive(input.input().toArray(new Integer[0])),
                 world.getEnabledFeatures()
