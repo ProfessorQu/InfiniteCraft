@@ -18,6 +18,10 @@ repositories {
 	// for more information about repositories.
 }
 
+loom {
+	serverOnlyMinecraftJar()
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -28,6 +32,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	implementation "com.microsoft.onnxruntime:onnxruntime:1.17.3"
+	include "com.microsoft.onnxruntime:onnxruntime:1.17.3"
 }
 
 processResources {
