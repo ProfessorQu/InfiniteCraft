@@ -23,14 +23,21 @@ public class Generator {
 
     private static final Random RNG = new Random();
 
+    /**
+     * Create a new Generator
+     * @param server the Minecraft server where the Generator is run
+     */
     public Generator(MinecraftServer server) {
-        int seed = (int) server.getOverworld().getSeed();
-        while (Math.abs(seed) > 1_000_000) {
-            seed /= 2;
-        }
+        this.seed = Generator.convertSeed(server.getOverworld().getSeed());
 
-        this.seed = seed;
+        this.loadModel();
+    }
 
+    /**
+     * Load the model
+     */
+    private void loadModel() {
+        // Get the resource stream
         URL stream = Generator.class.getResource("/assets/model.onnx");
         if (stream == null) return;
 
@@ -42,9 +49,8 @@ public class Generator {
             throw new RuntimeException("Failed to load model");
         }
 
-        OrtEnvironment env = OrtEnvironment.getEnvironment();
         try {
-            this.session = env.createSession(modelBytes);
+            this.session = this.environment.createSession(modelBytes);
         } catch (OrtException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to create session");
@@ -52,19 +58,28 @@ public class Generator {
     }
 
     /**
-     * Generate a new crafting recipe result from the given input
+     * Convert seed from long to int
+     * @param longSeed the seed as long
+     * @return the seed as int scaled to less than a million
+     */
+    private static int convertSeed(long longSeed) {
+        int seed = (int) longSeed;
+        while (Math.abs(seed) > 1_000_000) {
+            seed /= 2;
+        }
+
+        return seed;
+    }
+
+    /**
+     * Generate a new crafting recipe result from the given input from the AI model.
+     * If the model generates a disabled item, generate a random one and save it instead.
      * @param recipe the recipe input to check
      * @param enabledFeatures the features that are enabled in the world
      * @return the result of the recipe
      */
     public Pair<RecipeResult, Boolean> generate(int[] recipe, FeatureSet enabledFeatures) {
-        float[] recipeFloat = new float[recipe.length + 1];
-        for (int i = 0; i < recipe.length; i++) {
-            recipeFloat[i] = (float) recipe[i];
-        }
-        recipeFloat[recipe.length] = this.seed;
-
-        float[][] input = {recipeFloat};
+        float[][] input = this.convertInput(recipe);
         float[] output;
 
         try {
@@ -79,17 +94,37 @@ public class Generator {
             throw new RuntimeException("Failed to generate");
         }
 
-        RecipeResult result = new RecipeResult(output[0], output[1]);
-        boolean save = false;
+        RecipeResult result = RecipeResult.createRecipeResult(output[0], output[1]);
+        boolean saveResult = false;
 
-        while (!Registries.ITEM.get(result.getItemId()).isEnabled(enabledFeatures)) {
-            result.setItemId(getRandomItemId());
-            save = true;
+        // If the item is randomly generated, save the result
+        while (!Registries.ITEM.get(result.itemId()).isEnabled(enabledFeatures)) {
+            result = result.withItemId(getRandomItemId());
+            saveResult = true;
         }
 
-        return new Pair<>(result, save);
+        return new Pair<>(result, saveResult);
     }
 
+    /**
+     * Convert input from int array to input of neural network
+     * @param recipe the recipe to convert
+     * @return the input for a tensor
+     */
+    private float[][] convertInput(int[] recipe) {
+        float[] recipeFloat = new float[recipe.length + 1];
+        for (int i = 0; i < recipe.length; i++) {
+            recipeFloat[i] = (float) recipe[i];
+        }
+        recipeFloat[recipe.length] = this.seed;
+
+        return new float[][]{recipeFloat};
+    }
+
+    /**
+     * Get a random item id
+     * @return an item id
+     */
     private static int getRandomItemId() {
         return RNG.nextInt(Registries.ITEM.size());
     }

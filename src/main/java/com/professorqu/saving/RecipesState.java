@@ -18,6 +18,8 @@ public class RecipesState extends PersistentState {
             null
     );
 
+    private static final String RECIPES_FILE = "recipes";
+
     private static final String RECIPES_KEY = "Recipes";
     private static final String INPUT_KEY = "Input";
     private static final String RESULT_KEY = "Result";
@@ -50,8 +52,8 @@ public class RecipesState extends PersistentState {
             NbtCompound compound = new NbtCompound();
 
             compound.putIntArray(INPUT_KEY, input.input());
-            compound.putInt(RESULT_KEY, this.recipes.get(input).getItemId());
-            compound.putInt(COUNT_KEY, this.recipes.get(input).getCount());
+            compound.putInt(RESULT_KEY, this.recipes.get(input).itemId());
+            compound.putInt(COUNT_KEY, this.recipes.get(input).count());
 
             nbtList.add(compound);
         }
@@ -67,7 +69,7 @@ public class RecipesState extends PersistentState {
      */
     public static RecipesState getServerState(MinecraftServer server) {
         PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
-        RecipesState state = manager.getOrCreate(TYPE, InfiniteCraft.RECIPES_FILE);
+        RecipesState state = manager.getOrCreate(TYPE, RECIPES_FILE);
         state.markDirty();
         return state;
     }

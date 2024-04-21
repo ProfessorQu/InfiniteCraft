@@ -24,11 +24,18 @@ public class CraftingHelper {
     private static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
     private static Generator CURRENT_GENERATOR;
 
+    /**
+     * Create a new Generator
+     * @param server the server the Generator is run on
+     */
     public static void createGenerator(MinecraftServer server) {
         InfiniteCraft.LOGGER.info("Created new Generator");
         CURRENT_GENERATOR = new Generator(server);
     }
 
+    /**
+     * Destroy the current Generator
+     */
     public static void destroyGenerator() {
         InfiniteCraft.LOGGER.info("Destroyed current Generator");
         CURRENT_GENERATOR = null;
@@ -49,8 +56,10 @@ public class CraftingHelper {
 
         Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
         DefaultedList<Ingredient> ingredients = DefaultedList.ofSize(1, ingredient);
-        ItemStack itemStack = CraftingHelper.getCraftedItem(inventory, world);
 
+        ItemStack itemStack = CraftingHelper.getResultingItem(inventory, world);
+
+        // Create a new recipe
         RawShapedRecipe rawShapedRecipe = new RawShapedRecipe(
                 inventory.getWidth(), inventory.getHeight(),
                 ingredients, Optional.empty()
@@ -65,28 +74,40 @@ public class CraftingHelper {
         return Optional.of(new RecipeEntry<>(RECIPE_ID, recipe));
     }
 
-    private static ItemStack getCraftedItem(RecipeInputInventory inventory, ServerWorld world) {
-        MinecraftServer server = world.getServer();
+    /**
+     * Get the item resulting from the recipe
+     * @param inventory the inventory of crafting
+     * @param world the world that is on the server
+     * @return the item result of the recipe
+     */
+    private static ItemStack getResultingItem(RecipeInputInventory inventory, ServerWorld world) {
+        RecipesState state = RecipesState.getServerState(world.getServer());
 
+        // Create input from inventory
         RecipeInput input = RecipeInput.fromItemStacks(inventory.getHeldStacks());
-        RecipesState state = RecipesState.getServerState(server);
-
         RecipeResult result = state.tryGetResult(input);
+
         if (result == null) {
+            // Generate the new result
             Pair<RecipeResult, Boolean> pair = CraftingHelper.generateRecipeResult(input, world);
             result = pair.getLeft();
+            // Save the item if it should be saved
             if (pair.getRight()) {
                 state.addItem(input, result);
             }
         }
 
-        return new ItemStack(Registries.ITEM.get(result.getItemId()), result.getCount());
+        return new ItemStack(Registries.ITEM.get(result.itemId()), result.count());
     }
 
+    /**
+     * Generate the result of the recipe
+     * @param input the input of the recipe
+     * @param world the world of the recipe
+     * @return a pair of the recipe's result and a boolean to determine whether it should be saved
+     */
     private static Pair<RecipeResult, Boolean> generateRecipeResult(RecipeInput input, ServerWorld world) {
-        return CURRENT_GENERATOR.generate(
-                ArrayUtils.toPrimitive(input.input().toArray(new Integer[0])),
-                world.getEnabledFeatures()
-        );
+        int[] inputs = ArrayUtils.toPrimitive(input.input().toArray(new Integer[0]));
+        return CURRENT_GENERATOR.generate(inputs, world.getEnabledFeatures());
     }
 }

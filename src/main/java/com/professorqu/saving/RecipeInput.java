@@ -14,7 +14,7 @@ public record RecipeInput(List<Integer> input) {
      * @return the resulting input
      */
     public static RecipeInput fromItemStacks(List<ItemStack> itemStacks) {
-        return new RecipeInput(convertToItemIds(itemStacks));
+        return new RecipeInput(RecipeInput.toItemIds(itemStacks));
     }
 
     /**
@@ -23,39 +23,42 @@ public record RecipeInput(List<Integer> input) {
      * @param itemStacks a list of ItemStacks to convert to a list of item ids
      * @return a list of item ids
      */
-    private static List<Integer> convertToItemIds(List<ItemStack> itemStacks) {
+    private static List<Integer> toItemIds(List<ItemStack> itemStacks) {
         List<Integer> inputList = new ArrayList<>(itemStacks.stream().map(ItemStack::getItem).map(Item::getRawId).toList());
-        if (inputList.size() == 4) {
-            inputList.add(2, 0);
-        }
-
-        while (inputList.size() < 9) {
-            inputList.add(0);
-        }
-
-        while (inputList.get(0) == 0 && inputList.get(1) == 0 && inputList.get(2) == 0) {
-            for (int i = 0; i < 9; i++) {
-                inputList.set(i, Iterables.get(inputList, i + 3, 0));
-            }
-        }
-
-        while (inputList.get(0) == 0 && inputList.get(3) == 0 && inputList.get(6) == 0) {
-            for (int i = 0; i < 9; i += 3) {
-                inputList.set(i, inputList.get(i + 1));
-                inputList.set(i + 1, inputList.get(i + 2));
-                inputList.set(i + 2, 0);
-            }
-        }
-
-        return inputList;
+        return padList(inputList);
     }
 
     /**
-     * Get the input of the recipe
-     * @return the input of the recipe
+     * Pad the list of item ids
+     * @param ids the list of item ids of the recipe
+     * @return the padded list
      */
-    @Override
-    public List<Integer> input() {
-        return this.input;
+    private static List<Integer> padList(List<Integer> ids) {
+        // Convert 2x2 grid to 3x3
+        if (ids.size() == 4) {
+            ids.add(2, 0);
+        }
+
+        while (ids.size() < 9) {
+            ids.add(0);
+        }
+
+        // Move recipe up
+        while (ids.get(0) == 0 && ids.get(1) == 0 && ids.get(2) == 0) {
+            for (int i = 0; i < 9; i++) {
+                ids.set(i, Iterables.get(ids, i + 3, 0));
+            }
+        }
+
+        // Move recipe left
+        while (ids.get(0) == 0 && ids.get(3) == 0 && ids.get(6) == 0) {
+            for (int i = 0; i < 9; i += 3) {
+                ids.set(i, ids.get(i + 1));
+                ids.set(i + 1, ids.get(i + 2));
+                ids.set(i + 2, 0);
+            }
+        }
+
+        return ids;
     }
 }
