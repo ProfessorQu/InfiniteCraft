@@ -14,26 +14,18 @@ public record RecipeInput(List<Integer> input) {
      * @return the resulting input
      */
     public static RecipeInput fromItemStacks(List<ItemStack> itemStacks) {
-        return new RecipeInput(RecipeInput.toItemIds(itemStacks));
-    }
-
-    /**
-     * Convert a list of ItemStacks to a list of item ids
-     *
-     * @param itemStacks a list of ItemStacks to convert to a list of item ids
-     * @return a list of item ids
-     */
-    private static List<Integer> toItemIds(List<ItemStack> itemStacks) {
+//        return new RecipeInput(RecipeInput.stacksToItemIds(itemStacks));
         List<Integer> inputList = new ArrayList<>(itemStacks.stream().map(ItemStack::getItem).map(Item::getRawId).toList());
-        return padList(inputList);
+        transformList(inputList);
+        return new RecipeInput(inputList);
     }
 
     /**
      * Pad the list of item ids
+     *
      * @param ids the list of item ids of the recipe
-     * @return the padded list
      */
-    private static List<Integer> padList(List<Integer> ids) {
+    private static void transformList(List<Integer> ids) {
         // Convert 2x2 grid to 3x3
         if (ids.size() == 4) {
             ids.add(2, 0);
@@ -59,6 +51,5 @@ public record RecipeInput(List<Integer> input) {
             }
         }
 
-        return ids;
     }
 }

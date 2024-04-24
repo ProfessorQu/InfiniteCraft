@@ -1,7 +1,7 @@
 package com.professorqu.mixin;
 
 import com.google.gson.Gson;
-import com.professorqu.helpers.CraftingHelper;
+import com.professorqu.generate.Generator;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.recipe.*;
@@ -34,7 +34,7 @@ public abstract class RecipeManagerMixin extends JsonDataLoader {
         if (recipeEntry.isPresent()) {
             cir.setReturnValue(recipeEntry);
         } else {
-            cir.setReturnValue(CraftingHelper.getRecipeEntry(type, (RecipeInputInventory) inventory, (ServerWorld) world));
+            cir.setReturnValue(Generator.generateRecipe(type, (RecipeInputInventory) inventory, (ServerWorld) world));
         }
 
         cir.cancel();
