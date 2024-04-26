@@ -1,10 +1,10 @@
 package com.professorqu.generate;
 
 import com.professorqu.InfiniteCraft;
-import com.professorqu.saving.RecipeInput;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.inventory.Inventory;
@@ -22,19 +22,11 @@ import net.minecraft.util.collection.DefaultedList;
 import java.util.*;
 
 public class Generator {
-    private static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
+    public static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
 
     private static int seed;
 
     private static final Random RNG = new Random();
-
-//    private static final RandomCollection<Integer> RANDOM_COUNT = new RandomCollection<>();
-//    static {
-//        RANDOM_COUNT.add(50, 1);
-//        RANDOM_COUNT.add(25, 2);
-//        RANDOM_COUNT.add(15, 4);
-//        RANDOM_COUNT.add(10, 16);
-//    }
 
     private static final List<ClampedEntityAttribute> PLAYER_ATTRIBUTES = new ArrayList<>();
     static {
@@ -65,18 +57,16 @@ public class Generator {
     }
 
     /**
-     * Get the recipe entry
-     * @param type the recipe type
+     * Generate a crafting recipe
      * @param inventory the inventory where the recipe is
      * @param world the world of the server
      * @return an optional recipe entry
      * @param <C> extends Inventory
      * @param <T> extends Recipe<C>
      */
-    public static<C extends Inventory, T extends Recipe<C>> Optional<RecipeEntry<T>> generateRecipe(
-            RecipeType<T> type, RecipeInputInventory inventory, ServerWorld world) {
-        if (type != RecipeType.CRAFTING) return Optional.empty();
-
+    public static<C extends Inventory, T extends Recipe<C>> Optional<RecipeEntry<T>> generateCraftingRecipe(
+            RecipeInputInventory inventory, ServerWorld world
+    ) {
         Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
         DefaultedList<Ingredient> ingredients = DefaultedList.ofSize(1, ingredient);
 
@@ -104,8 +94,7 @@ public class Generator {
      * @return the item result of the recipe
      */
     private static ItemStack generateItemStack(RecipeInputInventory inventory, ServerWorld world) {
-        RecipeInput input = RecipeInput.fromItemStacks(inventory.getHeldStacks());
-        RNG.setSeed(input.hashCode() + Generator.seed);
+        RNG.setSeed(inventory.hashCode() + Generator.seed);
 
         ItemStack result = Generator.getRandomItemStack();
         while (!result.getItem().isEnabled(world.getEnabledFeatures())) {
@@ -179,22 +168,59 @@ public class Generator {
             value = Math.ceil(value * 10) / 10;
             var modifier = new EntityAttributeModifier(
                     attribute.getTranslationKey(),
-                    value,
+                    attribute.clamp(value),
                     EntityAttributeModifier.Operation.ADDITION
             );
 
-            if (stack.getItem() instanceof ArmorItem armorItem) {
-                EquipmentSlot slot = armorItem.getSlotType();
-
-                stack.addAttributeModifier(attribute, modifier, slot);
-            } else {
-                if (!stack.getAttributeModifiers(EquipmentSlot.MAINHAND).containsKey(attribute)) {
-                    stack.addAttributeModifier(attribute, modifier, EquipmentSlot.MAINHAND);
-                }
-                if (!stack.getAttributeModifiers(EquipmentSlot.OFFHAND).containsKey(attribute)) {
-                    stack.addAttributeModifier(attribute, modifier, EquipmentSlot.OFFHAND);
-                }
-            }
+            addAttribute(stack, attribute, modifier);
         }
+    }
+
+    /**
+     * Generate a smithing recipe
+     * @param inventory the inventory
+     * @return a smithing recipe
+     * @param <C> extends Inventory
+     * @param <T> extends Recipe<C>
+     */
+    public static<C extends Inventory, T extends Recipe<C>> List<RecipeEntry<T>> generateSmithingRecipe(
+            Inventory inventory
+    ) {
+        @SuppressWarnings("unchecked")
+        T recipe = (T) new SmithingCombineRecipe(
+                inventory.getStack(1),
+                inventory.getStack(2)
+        );
+
+        return List.of(new RecipeEntry<>(RECIPE_ID, recipe));
+    }
+
+    /**
+     * Add an attribute to a stack
+     * @param stack the stack to add the attribute to
+     * @param attribute the attribute to add
+     * @param modifier the modifier to add
+     */
+    public static void addAttribute(ItemStack stack, EntityAttribute attribute, EntityAttributeModifier modifier) {
+        for (EquipmentSlot slot : getPossibleEquipmentSlots(stack)) {
+            stack.addAttributeModifier(attribute, modifier, slot);
+        }
+    }
+
+    /**
+     * Get all possible equipment slots
+     * @param stack the stack to get the slots for
+     * @return a list of slots for the given stack
+     */
+    public static List<EquipmentSlot> getPossibleEquipmentSlots(ItemStack stack) {
+        List<EquipmentSlot> equipmentSlots = new ArrayList<>();
+        if (stack.getItem() instanceof ArmorItem armorItem) {
+            equipmentSlots.add(armorItem.getSlotType());
+        } else {
+            equipmentSlots.add(EquipmentSlot.MAINHAND);
+            equipmentSlots.add(EquipmentSlot.OFFHAND);
+        }
+
+        return equipmentSlots;
     }
 }
