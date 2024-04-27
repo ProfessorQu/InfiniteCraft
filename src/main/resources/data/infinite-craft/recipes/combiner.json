@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " E ",
+    "DOD",
+    "OOO"
+  ],
+  "key": {
+    "E": {
+      "item": "minecraft:dragon_egg"
+    },
+    "D": {
+      "item": "minecraft:diamond_block"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "item": "infinite-craft:combiner"
+  }
+}

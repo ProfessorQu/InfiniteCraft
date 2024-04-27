@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "infinite-craft:block/combiner_bottom",
+    "east": "infinite-craft:block/combiner_side",
+    "north": "infinite-craft:block/combiner_side",
+    "particle": "infinite-craft:block/combiner_side",
+    "south": "infinite-craft:block/combiner_side",
+    "up": "infinite-craft:block/combiner_top",
+    "west": "infinite-craft:block/combiner_side"
+  }
+}

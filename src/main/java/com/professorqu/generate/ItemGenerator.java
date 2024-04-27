@@ -1,15 +1,13 @@
 package com.professorqu.generate;
 
+import com.google.common.collect.Iterables;
 import com.professorqu.InfiniteCraft;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
-import net.minecraft.item.ArmorItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.recipe.*;
@@ -21,7 +19,7 @@ import net.minecraft.util.collection.DefaultedList;
 
 import java.util.*;
 
-public class Generator {
+public class ItemGenerator {
     public static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
 
     private static int seed;
@@ -53,7 +51,7 @@ public class Generator {
             seed /= 2;
         }
 
-        Generator.seed = seed;
+        ItemGenerator.seed = seed;
     }
 
     /**
@@ -70,7 +68,7 @@ public class Generator {
         Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
         DefaultedList<Ingredient> ingredients = DefaultedList.ofSize(1, ingredient);
 
-        ItemStack itemStack = Generator.generateItemStack(inventory, world);
+        ItemStack itemStack = ItemGenerator.generateItemStack(inventory, world);
 
         // Create a new recipe
         RawShapedRecipe rawShapedRecipe = new RawShapedRecipe(
@@ -94,11 +92,11 @@ public class Generator {
      * @return the item result of the recipe
      */
     private static ItemStack generateItemStack(RecipeInputInventory inventory, ServerWorld world) {
-        RNG.setSeed(inventory.hashCode() + Generator.seed);
+        RNG.setSeed(ItemGenerator.getHashFromInventory(inventory) + ItemGenerator.seed);
 
-        ItemStack result = Generator.getRandomItemStack();
+        ItemStack result = ItemGenerator.getRandomItemStack();
         while (!result.getItem().isEnabled(world.getEnabledFeatures())) {
-            result = Generator.getRandomItemStack();
+            result = ItemGenerator.getRandomItemStack();
         }
 
         return result;
@@ -110,7 +108,7 @@ public class Generator {
      */
     private static ItemStack getRandomItemStack() {
         Item item = getRandomItem();
-        int count = Generator.getRandomCount(item.getMaxCount());
+        int count = ItemGenerator.getRandomCount(item.getMaxCount());
 
         ItemStack stack = new ItemStack(item, count);
 
@@ -161,7 +159,7 @@ public class Generator {
      * @param stack the item stack to add attributes to
      */
     private static void addRandomAttributes(ItemStack stack) {
-        for (ClampedEntityAttribute attribute : Generator.PLAYER_ATTRIBUTES) {
+        for (ClampedEntityAttribute attribute : ItemGenerator.PLAYER_ATTRIBUTES) {
             if (RNG.nextFloat() > attributeChance) continue;
 
             double value = Math.pow(RNG.nextGaussian(attribute.getMinValue(), 1), 2);
@@ -172,55 +170,49 @@ public class Generator {
                     EntityAttributeModifier.Operation.ADDITION
             );
 
-            addAttribute(stack, attribute, modifier);
+            ItemChanger.addAttribute(stack, attribute, modifier);
         }
     }
 
     /**
-     * Generate a smithing recipe
-     * @param inventory the inventory
-     * @return a smithing recipe
-     * @param <C> extends Inventory
-     * @param <T> extends Recipe<C>
+     * Get a hash from the given inventory
+     * @param inventory the inventory to generate the hash from
+     * @return the generated hash
      */
-    public static<C extends Inventory, T extends Recipe<C>> List<RecipeEntry<T>> generateSmithingRecipe(
-            Inventory inventory
-    ) {
-        @SuppressWarnings("unchecked")
-        T recipe = (T) new SmithingCombineRecipe(
-                inventory.getStack(1),
-                inventory.getStack(2)
-        );
-
-        return List.of(new RecipeEntry<>(RECIPE_ID, recipe));
+    private static int getHashFromInventory(RecipeInputInventory inventory) {
+        List<Integer> inputList = new ArrayList<>(inventory.getHeldStacks().stream().map(ItemStack::getItem).map(Item::getRawId).toList());
+        transformList(inputList);
+        return inputList.hashCode();
     }
 
     /**
-     * Add an attribute to a stack
-     * @param stack the stack to add the attribute to
-     * @param attribute the attribute to add
-     * @param modifier the modifier to add
+     * Pad the list of item ids
+     * @param ids the list of item ids of the recipe
      */
-    public static void addAttribute(ItemStack stack, EntityAttribute attribute, EntityAttributeModifier modifier) {
-        for (EquipmentSlot slot : getPossibleEquipmentSlots(stack)) {
-            stack.addAttributeModifier(attribute, modifier, slot);
-        }
-    }
-
-    /**
-     * Get all possible equipment slots
-     * @param stack the stack to get the slots for
-     * @return a list of slots for the given stack
-     */
-    public static List<EquipmentSlot> getPossibleEquipmentSlots(ItemStack stack) {
-        List<EquipmentSlot> equipmentSlots = new ArrayList<>();
-        if (stack.getItem() instanceof ArmorItem armorItem) {
-            equipmentSlots.add(armorItem.getSlotType());
-        } else {
-            equipmentSlots.add(EquipmentSlot.MAINHAND);
-            equipmentSlots.add(EquipmentSlot.OFFHAND);
+    private static void transformList(List<Integer> ids) {
+        // Convert 2x2 grid to 3x3
+        if (ids.size() == 4) {
+            ids.add(2, 0);
         }
 
-        return equipmentSlots;
+        while (ids.size() < 9) {
+            ids.add(0);
+        }
+
+        // Move recipe up
+        while (ids.get(0) == 0 && ids.get(1) == 0 && ids.get(2) == 0) {
+            for (int i = 0; i < 9; i++) {
+                ids.set(i, Iterables.get(ids, i + 3, 0));
+            }
+        }
+
+        // Move recipe left
+        while (ids.get(0) == 0 && ids.get(3) == 0 && ids.get(6) == 0) {
+            for (int i = 0; i < 9; i += 3) {
+                ids.set(i, ids.get(i + 1));
+                ids.set(i + 1, ids.get(i + 2));
+                ids.set(i + 2, 0);
+            }
+        }
     }
 }
