@@ -49,6 +49,10 @@ public class ItemChanger {
         return changed;
     }
 
+    public static void addAttributes(ItemStack result, ItemStack attributesStack) {
+        ItemChanger.combineAttributes(result, attributesStack, result);
+    }
+
     /**
      * Combine enchantments between input1 and input2
      * @param input1 the first input

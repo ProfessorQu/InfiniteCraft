@@ -16,6 +16,7 @@ import net.minecraft.item.Items;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
@@ -117,8 +118,8 @@ public class ItemGenerator {
 
         if (item.getMaxCount() > 1) return stack;
 
-        addRandomEnchantments(stack);
-        addRandomAttributes(stack);
+        ItemGenerator.addRandomEnchantments(stack);
+        ItemGenerator.addRandomAttributes(stack);
 
         return stack;
     }
@@ -162,11 +163,7 @@ public class ItemGenerator {
      * @param stack the item stack to add attributes to
      */
     private static void addRandomAttributes(ItemStack stack) {
-        for (EquipmentSlot slot : ItemChanger.getPossibleEquipmentSlots(stack)) {
-            for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
-                stack.addAttributeModifier(entry.getKey(), entry.getValue(), slot);
-            }
-        }
+        ItemStack attributesStack = new ItemStack(stack.getItem());
 
         for (ClampedEntityAttribute attribute : ItemGenerator.PLAYER_ATTRIBUTES) {
             if (RNG.nextFloat() > attributeChance) continue;
@@ -179,8 +176,10 @@ public class ItemGenerator {
                     EntityAttributeModifier.Operation.ADDITION
             );
 
-            ItemChanger.addAttribute(stack, attribute, modifier);
+            ItemChanger.addAttribute(attributesStack, attribute, modifier);
         }
+
+        ItemChanger.addAttributes(stack, attributesStack);
     }
 
     /**
