@@ -15,7 +15,7 @@ public class ModScreenHandlers {
     private static <T extends ScreenHandler> ScreenHandlerType<T> register(ScreenHandlerType.Factory<T> factory) {
         return Registry.register(Registries.SCREEN_HANDLER,
                 new Identifier(InfiniteCraft.MOD_ID, "combining"),
-                new ScreenHandlerType<T>(factory, FeatureFlags.VANILLA_FEATURES));
+                new ScreenHandlerType<>(factory, FeatureFlags.VANILLA_FEATURES));
     }
 
     public static void registerScreenHandlers() {

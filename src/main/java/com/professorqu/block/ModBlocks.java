@@ -16,16 +16,17 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModBlocks {
+    private static final Identifier COMBINER_ID = new Identifier(InfiniteCraft.MOD_ID, "combiner");
     public static final Block COMBINER_BLOCK = registerBlock(
             new CombinerBlock(FabricBlockSettings.copyOf(Blocks.SMITHING_TABLE)));
 
     private static Block registerBlock(Block block) {
         registerBlockItem(block);
-        return Registry.register(Registries.BLOCK, new Identifier(InfiniteCraft.MOD_ID, "combiner"), block);
+        return Registry.register(Registries.BLOCK, COMBINER_ID, block);
     }
 
     private static void registerBlockItem(Block block) {
-        Registry.register(Registries.ITEM, new Identifier(InfiniteCraft.MOD_ID, "combiner"),
+        Registry.register(Registries.ITEM, COMBINER_ID,
                 new BlockItem(block, new FabricItemSettings()));
     }
 
@@ -37,5 +38,7 @@ public class ModBlocks {
         InfiniteCraft.LOGGER.info("Registering ModBlocks for: {}", InfiniteCraft.MOD_NAME);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(ModBlocks::addEntries);
+
+        Registry.register(Registries.BLOCK_TYPE, COMBINER_ID, CombinerBlock.CODEC);
     }
 }

@@ -3,13 +3,16 @@ package com.professorqu.generate;
 import com.google.common.collect.Iterables;
 import com.professorqu.InfiniteCraft;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.Registries;
@@ -159,6 +162,12 @@ public class ItemGenerator {
      * @param stack the item stack to add attributes to
      */
     private static void addRandomAttributes(ItemStack stack) {
+        for (EquipmentSlot slot : ItemChanger.getPossibleEquipmentSlots(stack)) {
+            for (Map.Entry<EntityAttribute, EntityAttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
+                stack.addAttributeModifier(entry.getKey(), entry.getValue(), slot);
+            }
+        }
+
         for (ClampedEntityAttribute attribute : ItemGenerator.PLAYER_ATTRIBUTES) {
             if (RNG.nextFloat() > attributeChance) continue;
 
