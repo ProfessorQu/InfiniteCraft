@@ -54,7 +54,6 @@ public class CombiningScreenHandler extends ForgingScreenHandler {
             this.output.setStack(0, result);
     }
 
-
     @Override
     protected ForgingSlotsManager getForgingSlotsManager() {
         return ForgingSlotsManager.create().input(0, 28, 38, stack -> stack.getMaxCount() == 1).input(1, 72, 38, stack -> stack.getMaxCount() == 1).output(2, 116, 38).build();

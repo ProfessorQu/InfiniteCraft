@@ -49,6 +49,11 @@ public class ItemChanger {
         return changed;
     }
 
+    /**
+     * Add attributes from the attributesStack to the result stack
+     * @param result the stack to add to
+     * @param attributesStack the attributes to add to the result
+     */
     public static void addAttributes(ItemStack result, ItemStack attributesStack) {
         ItemChanger.combineAttributes(result, attributesStack, result);
     }

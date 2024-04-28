@@ -1,6 +1,7 @@
 package com.professorqu.screen;
 
 import com.professorqu.InfiniteCraft;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.resource.featuretoggle.FeatureFlags;
@@ -20,5 +21,7 @@ public class ModScreenHandlers {
 
     public static void registerScreenHandlers() {
         InfiniteCraft.LOGGER.info("Registering Screen Handlers for: {}", InfiniteCraft.MOD_NAME);
+
+        HandledScreens.register(ModScreenHandlers.COMBINING_SCREEN_HANDLER, CombiningScreen::new);
     }
 }

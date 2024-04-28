@@ -2,21 +2,19 @@ package com.professorqu.generate;
 
 import com.google.common.collect.Iterables;
 import com.professorqu.InfiniteCraft;
+import com.professorqu.block.ModBlocks;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
-import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
@@ -97,21 +95,15 @@ public class ItemGenerator {
      */
     private static ItemStack generateItemStack(RecipeInputInventory inventory, ServerWorld world) {
         RNG.setSeed(ItemGenerator.getHashFromInventory(inventory) + ItemGenerator.seed);
-
-        ItemStack result = ItemGenerator.getRandomItemStack();
-        while (!result.getItem().isEnabled(world.getEnabledFeatures())) {
-            result = ItemGenerator.getRandomItemStack();
-        }
-
-        return result;
+        return ItemGenerator.getRandomItemStack(world.getEnabledFeatures());
     }
 
     /**
      * Create a random new ItemStack
      * @return a random ItemStack
      */
-    private static ItemStack getRandomItemStack() {
-        Item item = getRandomItem();
+    private static ItemStack getRandomItemStack(FeatureSet enabledFeatures) {
+        Item item = getRandomItem(enabledFeatures);
         int count = ItemGenerator.getRandomCount(item.getMaxCount());
 
         ItemStack stack = new ItemStack(item, count);
@@ -128,8 +120,13 @@ public class ItemGenerator {
      * Get a random item id
      * @return an item id
      */
-    private static Item getRandomItem() {
-        return Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
+    private static Item getRandomItem(FeatureSet enabledFeatures) {
+        Item item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
+        while (!item.isEnabled(enabledFeatures) || item == ModBlocks.COMBINER_BLOCK.asItem()) {
+            item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
+        }
+
+        return item;
     }
 
     /**
