@@ -22,11 +22,9 @@ import net.minecraft.util.collection.DefaultedList;
 import java.util.*;
 
 public class ItemGenerator {
-    public static final Identifier RECIPE_ID = new Identifier(InfiniteCraft.MOD_ID, "recipe");
-
-    private static int seed;
-
     private static final Random RNG = new Random();
+    private static int seed;
+    private static int recipeId = 0;
 
     private static final List<ClampedEntityAttribute> PLAYER_ATTRIBUTES = new ArrayList<>();
     static {
@@ -61,7 +59,6 @@ public class ItemGenerator {
      * @param inventory the inventory where the recipe is
      * @param world the world of the server
      * @return an optional recipe entry
-     * @param <C> extends Inventory
      * @param <T> extends Recipe<C>
      */
     public static<C extends Inventory, T extends Recipe<C>> Optional<RecipeEntry<T>> generateCraftingRecipe(
@@ -84,7 +81,11 @@ public class ItemGenerator {
                 itemStack
         );
 
-        return Optional.of(new RecipeEntry<>(RECIPE_ID, recipe));
+        return Optional.of(new RecipeEntry<>(ItemGenerator.getRecipeId(), recipe));
+    }
+
+    private static Identifier getRecipeId() {
+        return new Identifier(InfiniteCraft.MOD_ID, "recipe" + ++recipeId);
     }
 
     /**

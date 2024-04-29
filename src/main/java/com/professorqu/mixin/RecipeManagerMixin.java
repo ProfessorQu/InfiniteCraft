@@ -15,8 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Mixin(RecipeManager.class)
 public abstract class RecipeManagerMixin<C extends Inventory, T extends Recipe<C>> extends JsonDataLoader {
