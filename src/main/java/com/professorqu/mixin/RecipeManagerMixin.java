@@ -33,7 +33,7 @@ public abstract class RecipeManagerMixin<C extends Inventory, T extends Recipe<C
         if (recipeEntry.isPresent()) {
             cir.setReturnValue(recipeEntry);
         } else {
-            cir.setReturnValue(ItemGenerator.generateCraftingRecipe((RecipeInputInventory) inventory, (ServerWorld) world));
+            cir.setReturnValue(Optional.of(ItemGenerator.generateCraftingRecipe((RecipeInputInventory) inventory, (ServerWorld) world)));
         }
 
         cir.cancel();

@@ -2,7 +2,6 @@ package com.professorqu.generate;
 
 import com.google.common.collect.Iterables;
 import com.professorqu.InfiniteCraft;
-import com.professorqu.block.ModBlocks;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -23,6 +22,7 @@ import java.util.*;
 
 public class ItemGenerator {
     private static final Random RNG = new Random();
+    private static final Identifier COMBINER_ID = new Identifier(InfiniteCraft.MOD_ID, "combiner");
     private static int seed;
     private static int recipeId = 0;
 
@@ -61,7 +61,7 @@ public class ItemGenerator {
      * @return an optional recipe entry
      * @param <T> extends Recipe<C>
      */
-    public static<C extends Inventory, T extends Recipe<C>> Optional<RecipeEntry<T>> generateCraftingRecipe(
+    public static<C extends Inventory, T extends Recipe<C>> RecipeEntry<T> generateCraftingRecipe(
             RecipeInputInventory inventory, ServerWorld world
     ) {
         Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
@@ -81,7 +81,7 @@ public class ItemGenerator {
                 itemStack
         );
 
-        return Optional.of(new RecipeEntry<>(ItemGenerator.getRecipeId(), recipe));
+        return new RecipeEntry<>(ItemGenerator.getRecipeId(), recipe);
     }
 
     private static Identifier getRecipeId() {
@@ -123,7 +123,7 @@ public class ItemGenerator {
      */
     private static Item getRandomItem(FeatureSet enabledFeatures) {
         Item item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
-        while (!item.isEnabled(enabledFeatures) || item == ModBlocks.COMBINER_BLOCK.asItem()) {
+        while (!item.isEnabled(enabledFeatures) || item == Registries.ITEM.get(COMBINER_ID)) {
             item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
         }
 

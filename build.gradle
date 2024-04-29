@@ -18,6 +18,18 @@ repositories {
 	// for more information about repositories.
 }
 
+loom {
+    splitEnvironmentSourceSets()
+
+	mods {
+		"infinite-craft" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -26,6 +38,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	
 }
 
 processResources {
@@ -60,6 +73,7 @@ jar {
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
 			from components.java
 		}
 	}

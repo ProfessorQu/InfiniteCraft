@@ -1,22 +1,27 @@
 package com.professorqu.screen;
 
+import com.professorqu.InfiniteCraft;
 import com.professorqu.block.ModBlocks;
 import com.professorqu.generate.ItemChanger;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
 import net.minecraft.screen.ForgingScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.ForgingSlotsManager;
+import net.minecraft.util.Identifier;
 
 public class CombiningScreenHandler extends ForgingScreenHandler {
+    private static final Identifier COMBINER_SCREEN_HANDLER_ID = new Identifier(InfiniteCraft.MOD_ID, "combining");
+
     public CombiningScreenHandler(int syncId, PlayerInventory playerInventory) {
         this(syncId, playerInventory, ScreenHandlerContext.EMPTY);
     }
 
     public CombiningScreenHandler(int syncId, PlayerInventory inventory, ScreenHandlerContext context) {
-        super(ModScreenHandlers.COMBINING_SCREEN_HANDLER, syncId, inventory, context);
+        super(Registries.SCREEN_HANDLER.get(COMBINER_SCREEN_HANDLER_ID), syncId, inventory, context);
     }
 
     @Override
