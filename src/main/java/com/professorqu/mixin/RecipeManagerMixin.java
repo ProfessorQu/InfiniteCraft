@@ -1,11 +1,9 @@
 package com.professorqu.mixin;
 
-import com.google.gson.Gson;
 import com.professorqu.generate.ItemGenerator;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.recipe.*;
-import net.minecraft.resource.JsonDataLoader;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -18,22 +16,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.*;
 
 @Mixin(RecipeManager.class)
-public abstract class RecipeManagerMixin<C extends Inventory, T extends Recipe<C>> extends JsonDataLoader {
-    public RecipeManagerMixin(Gson gson, String dataType) {
-        super(gson, dataType);
-    }
-
+public abstract class RecipeManagerMixin<C extends Inventory, T extends Recipe<C>> {
     @Shadow protected abstract Map<Identifier, RecipeEntry<T>> getAllOfType(RecipeType<T> type);
 
     @Inject(method = "getFirstMatch(Lnet/minecraft/recipe/RecipeType;Lnet/minecraft/inventory/Inventory;Lnet/minecraft/world/World;)Ljava/util/Optional;", at = @At("HEAD"), cancellable = true)
-    private void getFirstMatch(RecipeType<T> type, C inventory, World world, CallbackInfoReturnable<Optional<RecipeEntry<T>>> cir) {
+    private void getFirstMatchInject(RecipeType<T> type, C inventory, World world, CallbackInfoReturnable<Optional<RecipeEntry<T>>> cir) {
         if (world.isClient || inventory.isEmpty() || type != RecipeType.CRAFTING) return;
-        Optional<RecipeEntry<T>> recipeEntry = this.getAllOfType(type).values().stream().filter(recipe -> recipe.value().matches(inventory, world)).findFirst();
+        Optional<RecipeEntry<T>> vanillaRecipe = this.getAllOfType(type).values().stream().filter(recipe -> recipe.value().matches(inventory, world)).findFirst();
 
-        if (recipeEntry.isPresent()) {
-            cir.setReturnValue(recipeEntry);
+        if (vanillaRecipe.isPresent()) {
+            cir.setReturnValue(vanillaRecipe);
         } else {
-            cir.setReturnValue(Optional.of(ItemGenerator.generateCraftingRecipe((RecipeInputInventory) inventory, (ServerWorld) world)));
+            RecipeEntry<T> recipeEntry = ItemGenerator.generateCraftingRecipe((RecipeInputInventory) inventory, (ServerWorld) world);
+            cir.setReturnValue(Optional.of(recipeEntry));
         }
 
         cir.cancel();

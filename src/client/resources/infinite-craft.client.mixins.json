@@ -3,6 +3,8 @@
   "package": "com.professorqu.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "CraftingScreenHandlerMixin",
+    "CraftingScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -10,10 +10,10 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.Registries;
-import net.minecraft.resource.featuretoggle.FeatureSet;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
@@ -24,7 +24,6 @@ public class ItemGenerator {
     private static final Random RNG = new Random();
     private static final Identifier COMBINER_ID = new Identifier(InfiniteCraft.MOD_ID, "combiner");
     private static int seed;
-    private static int recipeId = 0;
 
     private static final List<ClampedEntityAttribute> PLAYER_ATTRIBUTES = new ArrayList<>();
     static {
@@ -64,8 +63,20 @@ public class ItemGenerator {
     public static<C extends Inventory, T extends Recipe<C>> RecipeEntry<T> generateCraftingRecipe(
             RecipeInputInventory inventory, ServerWorld world
     ) {
-        Ingredient ingredient = Ingredient.ofStacks(inventory.getHeldStacks().stream());
-        DefaultedList<Ingredient> ingredients = DefaultedList.ofSize(1, ingredient);
+        Ingredient defaultIngredient = Ingredient.ofStacks(new ItemStack(Items.STICK, 65));
+        DefaultedList<Ingredient> ingredients = DefaultedList.of();
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = new ItemStack(inventory.getStack(i).getItem());
+            Ingredient ingredient;
+            if (stack.isEmpty()) {
+                ingredient = defaultIngredient;
+            } else {
+                ingredient = Ingredient.ofStacks(stack);
+            }
+
+            ingredients.add(ingredient);
+        }
+        transformList(ingredients, defaultIngredient);
 
         ItemStack itemStack = ItemGenerator.generateItemStack(inventory, world);
 
@@ -76,16 +87,13 @@ public class ItemGenerator {
         );
         @SuppressWarnings("unchecked")
         T recipe = (T) new ShapedRecipe(
-                "misc", CraftingRecipeCategory.MISC,
+                "infinite",
+                CraftingRecipeCategory.MISC,
                 rawShapedRecipe,
                 itemStack
         );
 
-        return new RecipeEntry<>(ItemGenerator.getRecipeId(), recipe);
-    }
-
-    private static Identifier getRecipeId() {
-        return new Identifier(InfiniteCraft.MOD_ID, "recipe" + ++recipeId);
+        return new RecipeEntry<>(InfiniteCraft.RECIPE_ID, recipe);
     }
 
     /**
@@ -96,15 +104,15 @@ public class ItemGenerator {
      */
     private static ItemStack generateItemStack(RecipeInputInventory inventory, ServerWorld world) {
         RNG.setSeed(ItemGenerator.getHashFromInventory(inventory) + ItemGenerator.seed);
-        return ItemGenerator.getRandomItemStack(world.getEnabledFeatures());
+        return ItemGenerator.getRandomItemStack(world);
     }
 
     /**
      * Create a random new ItemStack
      * @return a random ItemStack
      */
-    private static ItemStack getRandomItemStack(FeatureSet enabledFeatures) {
-        Item item = getRandomItem(enabledFeatures);
+    private static ItemStack getRandomItemStack(ServerWorld world) {
+        Item item = getRandomItem(world);
         int count = ItemGenerator.getRandomCount(item.getMaxCount());
 
         ItemStack stack = new ItemStack(item, count);
@@ -121,9 +129,12 @@ public class ItemGenerator {
      * Get a random item id
      * @return an item id
      */
-    private static Item getRandomItem(FeatureSet enabledFeatures) {
+    private static Item getRandomItem(ServerWorld world) {
         Item item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
-        while (!item.isEnabled(enabledFeatures) || item == Registries.ITEM.get(COMBINER_ID)) {
+        boolean canGenerateEgg = world.getEnderDragonFight() != null && world.getEnderDragonFight().hasPreviouslyKilled();
+        while (!item.isEnabled(world.getEnabledFeatures()) ||
+                item == Registries.ITEM.get(COMBINER_ID) ||
+                (item == Items.DRAGON_EGG && !canGenerateEgg)) {
             item = Registries.ITEM.get(RNG.nextInt(Registries.ITEM.size()));
         }
 
@@ -187,37 +198,38 @@ public class ItemGenerator {
      */
     private static int getHashFromInventory(RecipeInputInventory inventory) {
         List<Integer> inputList = new ArrayList<>(inventory.getHeldStacks().stream().map(ItemStack::getItem).map(Item::getRawId).toList());
-        transformList(inputList);
+        transformList(inputList, 0);
         return inputList.hashCode();
     }
 
     /**
-     * Pad the list of item ids
-     * @param ids the list of item ids of the recipe
+     * Pad the list of item list
+     * @param list the list of item list of the recipe
+     * @param defaultElement the default element to add
      */
-    private static void transformList(List<Integer> ids) {
+    private static<T> void transformList(List<T> list, T defaultElement) {
         // Convert 2x2 grid to 3x3
-        if (ids.size() == 4) {
-            ids.add(2, 0);
+        if (list.size() == 4) {
+            list.add(2, defaultElement);
         }
 
-        while (ids.size() < 9) {
-            ids.add(0);
+        while (list.size() < 9) {
+            list.add(defaultElement);
         }
 
         // Move recipe up
-        while (ids.get(0) == 0 && ids.get(1) == 0 && ids.get(2) == 0) {
+        while (list.get(0) == defaultElement && list.get(1) == defaultElement && list.get(2) == defaultElement) {
             for (int i = 0; i < 9; i++) {
-                ids.set(i, Iterables.get(ids, i + 3, 0));
+                list.set(i, Iterables.get(list, i + 3, defaultElement));
             }
         }
 
         // Move recipe left
-        while (ids.get(0) == 0 && ids.get(3) == 0 && ids.get(6) == 0) {
+        while (list.get(0) == defaultElement && list.get(3) == defaultElement && list.get(6) == defaultElement) {
             for (int i = 0; i < 9; i += 3) {
-                ids.set(i, ids.get(i + 1));
-                ids.set(i + 1, ids.get(i + 2));
-                ids.set(i + 2, 0);
+                list.set(i, list.get(i + 1));
+                list.set(i + 1, list.get(i + 2));
+                list.set(i + 2, defaultElement);
             }
         }
     }
