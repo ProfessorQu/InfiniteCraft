@@ -25,6 +25,8 @@ public class InfiniteCraft implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ItemGenerator.loadNames();
+
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> ItemGenerator.setSeed(server.getOverworld().getSeed()));
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			PacketByteBuf buf = PacketByteBufs.create();

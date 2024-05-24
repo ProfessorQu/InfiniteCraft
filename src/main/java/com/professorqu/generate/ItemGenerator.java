@@ -6,11 +6,16 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.attribute.ClampedEntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectCategory;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.RecipeInputInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.potion.PotionUtil;
 import net.minecraft.recipe.*;
 import net.minecraft.recipe.book.CraftingRecipeCategory;
 import net.minecraft.registry.Registries;
@@ -18,6 +23,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.collection.DefaultedList;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 public class ItemGenerator {
@@ -39,6 +47,27 @@ public class ItemGenerator {
 
     private static final float enchantmentChance = 0.2f;
     private static final float attributeChance = 0.2f;
+    private static final float effectChance = 0.2f;
+
+    private static final List<String> firstNames = new ArrayList<>();
+    private static final List<String> lastNames = new ArrayList<>();
+
+    public static void loadNames() {
+        firstNames.clear();
+        lastNames.clear();
+
+        firstNames.addAll(loadNames("/data/infinite-craft/names/first-names.txt"));
+        lastNames.addAll(loadNames("/data/infinite-craft/names/last-names.txt"));
+    }
+
+    private static List<String> loadNames(String path) {
+        InputStream stream = ItemGenerator.class.getResourceAsStream(path);
+        if (stream == null)
+            throw new RuntimeException("Failed to load names");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        return reader.lines().map(string -> string.substring(0, 1).toUpperCase() + string.substring(1)).toList();
+    }
 
     /**
      * Convert seed from long to int
@@ -117,10 +146,14 @@ public class ItemGenerator {
 
         ItemStack stack = new ItemStack(item, count);
 
+        if (ItemGenerator.canHavePotionEffects(stack.getItem()))
+            ItemGenerator.addPotionEffects(stack);
+
         if (item.getMaxCount() > 1) return stack;
 
-        ItemGenerator.addRandomEnchantments(stack);
-        ItemGenerator.addRandomAttributes(stack);
+        ItemGenerator.addEnchantments(stack);
+        ItemGenerator.addAttributes(stack);
+        ItemGenerator.setRandomName(stack);
 
         return stack;
     }
@@ -156,7 +189,7 @@ public class ItemGenerator {
      * Add random enchantments to an item stack
      * @param stack the item stack to add enchantments to
      */
-    private static void addRandomEnchantments(ItemStack stack) {
+    private static void addEnchantments(ItemStack stack) {
         for (Enchantment enchantment : Registries.ENCHANTMENT) {
             if (enchantment.isCursed()
                     || !enchantment.target.isAcceptableItem(stack.getItem())
@@ -171,7 +204,7 @@ public class ItemGenerator {
      * Add random attributes to an item stack
      * @param stack the item stack to add attributes to
      */
-    private static void addRandomAttributes(ItemStack stack) {
+    private static void addAttributes(ItemStack stack) {
         ItemStack attributesStack = new ItemStack(stack.getItem());
 
         for (ClampedEntityAttribute attribute : ItemGenerator.PLAYER_ATTRIBUTES) {
@@ -189,6 +222,39 @@ public class ItemGenerator {
         }
 
         ItemChanger.addAttributes(stack, attributesStack);
+    }
+
+    private static void addPotionEffects(ItemStack stack) {
+        StatusEffectCategory disallowedCategory = stack.getItem() == Items.TIPPED_ARROW ? StatusEffectCategory.BENEFICIAL : StatusEffectCategory.HARMFUL;
+
+        List<StatusEffectInstance> effects = new ArrayList<>();
+        for (StatusEffect effect : Registries.STATUS_EFFECT) {
+            if (effect.getCategory() == disallowedCategory || effect.isInstant() || RNG.nextFloat() > effectChance) continue;
+
+            effects.add(new StatusEffectInstance(
+                    effect,
+                    (int) Math.max(Math.abs(RNG.nextGaussian(200, 400)), 200),
+                    (int) Math.abs(RNG.nextGaussian(0, 1))
+            ));
+        }
+
+        PotionUtil.setCustomPotionEffects(stack, effects);
+    }
+
+    private static void setRandomName(ItemStack stack) {
+        int firstNameIndex = RNG.nextInt(firstNames.size());
+        int lastNameIndex = RNG.nextInt(lastNames.size());
+
+        String name = firstNames.get(firstNameIndex) + " " + lastNames.get(lastNameIndex);
+
+
+        String json = "{\"text\":\"" + name + "\",\"italic\":false}";
+        NbtCompound nbtCompound = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
+        nbtCompound.putString(ItemStack.NAME_KEY, json);
+    }
+
+    private static boolean canHavePotionEffects(Item item) {
+        return item == Items.POTION || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION || item == Items.TIPPED_ARROW;
     }
 
     /**
