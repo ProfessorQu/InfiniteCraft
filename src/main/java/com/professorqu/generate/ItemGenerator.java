@@ -225,7 +225,14 @@ public class ItemGenerator {
     }
 
     private static void addPotionEffects(ItemStack stack) {
-        StatusEffectCategory disallowedCategory = stack.getItem() == Items.TIPPED_ARROW ? StatusEffectCategory.BENEFICIAL : StatusEffectCategory.HARMFUL;
+        StatusEffectCategory disallowedCategory;
+        if (stack.isOf(Items.TIPPED_ARROW)) {
+            disallowedCategory = StatusEffectCategory.BENEFICIAL;
+        } else if (stack.isOf(Items.POTION)) {
+            disallowedCategory = StatusEffectCategory.HARMFUL;
+        } else {
+            disallowedCategory = RNG.nextBoolean() ? StatusEffectCategory.HARMFUL : StatusEffectCategory.BENEFICIAL;
+        }
 
         List<StatusEffectInstance> effects = new ArrayList<>();
         for (StatusEffect effect : Registries.STATUS_EFFECT) {
