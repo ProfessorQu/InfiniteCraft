@@ -8,6 +8,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
@@ -37,5 +39,9 @@ public class InfiniteCraft implements ModInitializer {
 		ModBlocks.registerModBlocks();
 
 		LOGGER.info("Done loading: {}", MOD_NAME);
+	}
+
+	public static boolean canHavePotionEffects(Item item) {
+		return item == Items.POTION || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION || item == Items.TIPPED_ARROW;
 	}
 }

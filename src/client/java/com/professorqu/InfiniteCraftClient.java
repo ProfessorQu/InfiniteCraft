@@ -17,9 +17,7 @@ public class InfiniteCraftClient implements ClientModInitializer {
 		ModScreenHandlers.registerScreenHandlers();
 
 		ClientLifecycleEvents.CLIENT_STARTED.register(Recipes::initialize);
-
 		ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, client1) -> Recipes.save());
-
 		ClientPlayNetworking.registerGlobalReceiver(InfiniteCraft.SEEDHASH_PACKET_ID, ((client, handler, buf, responseSender) -> {
 			seedHash = buf.readLong();
 			Recipes.load();

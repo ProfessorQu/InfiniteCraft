@@ -1,18 +1,23 @@
 package com.professorqu.generate;
 
 import com.google.common.collect.Multimap;
+import com.professorqu.InfiniteCraft;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.PotionUtil;
+import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class ItemChanger {
     /**
@@ -137,5 +142,52 @@ public class ItemChanger {
         }
 
         return equipmentSlots;
+    }
+
+    public static boolean combinePotionEffects(ItemStack input1, ItemStack input2, ItemStack result) {
+        if (!InfiniteCraft.canHavePotionEffects(input1.getItem()) || !InfiniteCraft.canHavePotionEffects(input2.getItem()))
+            return false;
+
+        List<StatusEffectInstance> effects = PotionUtil.getCustomPotionEffects(input1);
+        for (StatusEffectInstance effect : PotionUtil.getCustomPotionEffects(input2)) {
+            List<StatusEffectInstance> matches = effects.stream().filter(effect1 -> effect1.getEffectType() == effect.getEffectType()).toList();
+            if (matches.isEmpty()) {
+                effects.add(effect);
+                continue;
+            }
+
+            StatusEffectInstance matchingEffect = matches.get(0);
+            effects.remove(matchingEffect);
+
+            int amplifier = matchingEffect.getAmplifier() + effect.getAmplifier() + 1;
+
+            StatusEffectInstance newEffect = new StatusEffectInstance(
+                    matchingEffect.getEffectType(),
+                    matchingEffect.getDuration() + effect.getDuration(),
+                    amplifier
+            );
+
+            effects.add(newEffect);
+        }
+
+        PotionUtil.setCustomPotionEffects(result, effects);
+
+        return true;
+    }
+
+    public static boolean combineNames(ItemStack input1, ItemStack input2, ItemStack result) {
+        if (!input1.hasCustomName() || !input2.hasCustomName())
+            return false;
+
+        String[] name1 = input1.getName().getString().split(" ");
+        String[] name2 = input2.getName().getString().split(" ");
+
+        if (name1.length < 2 || name2.length < 2)
+            return false;
+
+        String newName = name1[0] + " " + name2[1];
+        ItemGenerator.setName(result, newName);
+
+        return true;
     }
 }

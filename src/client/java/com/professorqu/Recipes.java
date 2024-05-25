@@ -42,6 +42,8 @@ public class Recipes {
         SAVED_RECIPES.clear();
         CURRENT_RECIPE.clear();
         lastRecipe = null;
+
+        System.out.println("Cleared!");
     }
 
     public static void save() {
@@ -93,18 +95,18 @@ public class Recipes {
             fileOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            Recipes.reset();
         }
-
-        reset();
     }
 
     public static void load() {
-        reset();
+        Recipes.reset();
 
         try {
             Scanner scanner = new Scanner(recipesFile);
             long seedHash;
-            String recipesString = null;
+            String recipesString;
             if (!scanner.hasNextLine())
                 return;
 
@@ -114,6 +116,8 @@ public class Recipes {
                 seedHash = Long.parseLong(strings[0]);
                 if (strings.length > 1)
                     recipesString = strings[1];
+                else
+                    recipesString = null;
             } while (scanner.hasNextLine() && seedHash != InfiniteCraftClient.seedHash);
 
             if (seedHash != InfiniteCraftClient.seedHash || recipesString == null || recipesString.isEmpty())
@@ -127,9 +131,6 @@ public class Recipes {
                 String ingredientsString = recipe[0];
                 List<Ingredient> ingredientsList = Arrays.stream(ingredientsString.split(INGREDIENT_SEPARATOR))
                         .map(Recipes::stringToIngredient).toList();
-//                        .map(Integer::valueOf).map(Item::byRawId)
-//                        .map(item -> item == Items.AIR ? new ItemStack(Items.STICK, 65) : new ItemStack(item))
-//                        .map(Ingredient::ofStacks).toList();
                 DefaultedList<Ingredient> ingredients = DefaultedList.of();
                 ingredients.addAll(ingredientsList);
 

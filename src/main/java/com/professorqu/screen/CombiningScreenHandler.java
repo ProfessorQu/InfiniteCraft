@@ -6,6 +6,7 @@ import com.professorqu.generate.ItemChanger;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.screen.ForgingScreenHandler;
@@ -54,8 +55,11 @@ public class CombiningScreenHandler extends ForgingScreenHandler {
 
         boolean changed1 = ItemChanger.combineEnchantments(baseStack, additionStack, result);
         boolean changed2 = ItemChanger.combineAttributes(baseStack, additionStack, result);
+        boolean changed3 = ItemChanger.combinePotionEffects(baseStack, additionStack, result);
 
-        if (changed1 || changed2)
+        boolean changed4 = ItemChanger.combineNames(baseStack, additionStack, result);
+
+        if (changed1 || changed2 || changed3 || changed4)
             this.output.setStack(0, result);
     }
 

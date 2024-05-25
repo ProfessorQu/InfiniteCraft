@@ -146,7 +146,7 @@ public class ItemGenerator {
 
         ItemStack stack = new ItemStack(item, count);
 
-        if (ItemGenerator.canHavePotionEffects(stack.getItem()))
+        if (InfiniteCraft.canHavePotionEffects(stack.getItem()))
             ItemGenerator.addPotionEffects(stack);
 
         if (item.getMaxCount() > 1) return stack;
@@ -253,15 +253,13 @@ public class ItemGenerator {
         int lastNameIndex = RNG.nextInt(lastNames.size());
 
         String name = firstNames.get(firstNameIndex) + " " + lastNames.get(lastNameIndex);
+        setName(stack, name);
+    }
 
-
+    public static void setName(ItemStack stack, String name) {
         String json = "{\"text\":\"" + name + "\",\"italic\":false}";
         NbtCompound nbtCompound = stack.getOrCreateSubNbt(ItemStack.DISPLAY_KEY);
         nbtCompound.putString(ItemStack.NAME_KEY, json);
-    }
-
-    private static boolean canHavePotionEffects(Item item) {
-        return item == Items.POTION || item == Items.SPLASH_POTION || item == Items.LINGERING_POTION || item == Items.TIPPED_ARROW;
     }
 
     /**
