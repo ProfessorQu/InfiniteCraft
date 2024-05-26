@@ -36,14 +36,17 @@ public class Recipes {
 
     public static void initialize(MinecraftClient client) {
         recipesFile = new File(client.runDirectory, "recipes.txt");
+        try {
+            recipesFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void reset() {
         SAVED_RECIPES.clear();
         CURRENT_RECIPE.clear();
         lastRecipe = null;
-
-        System.out.println("Cleared!");
     }
 
     public static void save() {
@@ -59,10 +62,6 @@ public class Recipes {
                 String ingredients = recipe.getIngredients()
                         .stream().map(Recipes::ingredientToString)
                         .collect(Collectors.joining(INGREDIENT_SEPARATOR));
-//                        .map(ingredient -> (Arrays.stream(ingredient.getMatchingStacks())
-//                                .findFirst().orElse(ItemStack.EMPTY))
-//                        ).map(stack -> stack.getCount() == 65 ? ItemStack.EMPTY.getItem() : stack.getItem())
-//                        .map(Item::getRawId).map(String::valueOf).collect(Collectors.joining(INGREDIENT_SEPARATOR));
 
                 String recipeString = ingredients + RECIPE_SEPARATOR + result;
                 recipes.add(recipeString);
@@ -94,7 +93,7 @@ public class Recipes {
             fileOutputStream.write(buffer.toString().getBytes());
             fileOutputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } finally {
             Recipes.reset();
         }
@@ -146,7 +145,7 @@ public class Recipes {
                 )));
             }
         } catch (IOException | CommandSyntaxException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
