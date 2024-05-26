@@ -156,15 +156,15 @@ public class Recipes {
     public static void saveLastRecipe() {
         if (lastRecipe == null) return;
 
-        boolean notSaved = true;
+        boolean alreadySaved = false;
         for (RecipeEntry<?> recipeEntry : SAVED_RECIPES) {
             if (entriesMatch(recipeEntry, lastRecipe)) {
-                notSaved = false;
+                alreadySaved = true;
                 break;
             }
         }
 
-        if (notSaved)
+        if (!alreadySaved)
             SAVED_RECIPES.add(lastRecipe);
     }
 
@@ -225,7 +225,11 @@ public class Recipes {
             return false;
 
         for (int i = 0; i < ingredients1.size(); i++) {
-            if (ingredients1.get(i).getMatchingStacks()[0].getItem() != ingredients2.get(i).getMatchingStacks()[0].getItem())
+            ItemStack stack1 = ingredients1.get(i).getMatchingStacks()[0];
+            ItemStack stack2 = ingredients2.get(i).getMatchingStacks()[0];
+            if (stack1.getItem() != stack2.getItem())
+                return false;
+            else if (stack1.getCount() == 65 ^ stack2.getCount() == 65)
                 return false;
         }
 
